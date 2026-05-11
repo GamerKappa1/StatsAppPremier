@@ -1,0 +1,236 @@
+data: list
+match (data[i]):
+    is_available -> True/False
+    metadata
+        map
+        game_version
+        game_length
+        game_start
+        game_start_patched (readable format)
+        rounds_played
+        mode (comp, premier, etc.)
+        mode_id
+        queue
+        season_id
+        platform
+        matchid
+        premier_info
+            tournament_id
+            matchup_id
+        region
+        cluster (server)
+    players
+        all_players -> list
+            player (all_players[i]):
+                puuid
+                name
+                tag
+                team
+                level
+                character
+                currenttier
+                player_card
+                player_title
+                party_id
+                session_playtime
+                    minutes         (total time)
+                    seconds         (total time)
+                    milliseconds    (total time)
+                behavior
+                    afk_rounds
+                    friendly_fire
+                        incoming
+                        outgoing
+                    rounds_in_spawn
+                platform
+                    type (pc/console)
+                    os
+                        name
+                        version
+                ability_casts
+                    x_cast
+                    e_cast
+                    q_cast
+                    c_cast
+                assets
+                    card
+                        small
+                        large
+                        wide
+                    agent
+                        small
+                        bust
+                        full
+                        killfeed
+                stats
+                    score
+                    kills
+                    deaths
+                    assists
+                    bodyshots
+                    headshots
+                    legshots
+                economy
+                    spent
+                        overall
+                        average
+                    loadout_value
+                        overall
+                        average
+                damage_made
+                damage_recieved
+        red -> list
+            -# same as all_players but with true red #-
+        blue -> list
+            -# same as all_players but with true blue #-
+    observers -> list
+        not available due to lack of observers (index out of bounds)
+    coaches -> list
+        not available due to lack of coaches (index out of bounds)
+    teams
+        red
+            has_won
+            rounds_won
+            rounds_lost
+            roster
+                id
+                members -> list of ids
+                name
+                tag
+                customization
+                    icon
+                    image
+                    primary_color
+                    secondary_color
+                    tertiary_color
+        blue
+            -# same as red #-
+    rounds -> list
+        round (rounds[i])
+            winning_team
+            end_type
+            bomb_planted
+            bomb_defused
+            plant_events
+                plant_location
+                    x
+                    y
+                planted_by
+                    puuid
+                    display_name
+                    team
+                plant_site
+                plant_time_in_round
+                player_locations_on_plant -> list
+                    player_puuid
+                    player_display_name
+                    player_team
+                    location
+                        x
+                        y
+                    view_radians
+            defuse_events
+                defuse_location
+                defused_by
+                defuse_time_in_round
+                player_locations_on_defuse -> list
+                    -# same as player_locations_on_plant #-
+            player_stats -> list
+                ability_casts
+                    x_casts
+                    e_casts
+                    q_casts
+                    c_casts
+                player_puuid
+                player_display_name
+                player_team
+                damage_events -> list
+                    receiver_puuid
+                    receiver_display_name
+                    receiver_team
+                    bodyshots
+                    headshots
+                    legshots
+                    damage
+                kill_events -> list
+                    kill_time_in_round
+                    kill_time_in_match
+                    killer_puuid
+                    killer_display_name
+                    killer_team
+                    victim_puuid
+                    victim_display_name
+                    victim_team
+                    victim_death_location
+                        x
+                        y
+                    damage_weapon_id
+                    damage_weapon_name
+                    damage_weapon_assets
+                        display_icon
+                        killfeed_icon
+                    secondary_fire_mode
+                    player_locations_on_kill -> list
+                        player_puuid
+                        player_display_name
+                        player_team
+                        location
+                            x
+                            y
+                        view_radians
+                assistants -> list
+                    assistant_puuid
+                    assistant_display_name
+                    assistant_team
+            kills
+            score
+            economy
+                loadout_value
+                remaining
+                spent
+                weapon
+                    id
+                    name
+                    assets
+                        display_icon
+                        killfeed_icon
+                armor
+                    id
+                    name
+                    assets
+                        display_icon
+            was_afk
+            was_penalized
+            stayed_in_spawn
+    kills -> list
+        kill (kills[i])
+            kill_time_in_round
+            kill_time_in_match
+            round
+            killer_puuid
+            killer_display_name
+            killer_team
+            victim_puuid
+            victim_display_name
+            victim_team
+            victim_death_location
+                x
+                y
+            damage_weapon_id
+            damage_weapon_name
+            damage_weapon_assets
+                display_icon
+                killfeed_icon
+            secondary_fire_mode
+            player_locations_on_kill -> list
+                player_puuid
+                player_display_name
+                player_team
+                location
+                    x
+                    y
+                view_radians
+            assistants -> list
+                assistant_puuid
+                assistant_display_name
+                assistant_team
