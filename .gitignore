@@ -2,3 +2,9 @@
 data/
 __pycache__/
 *.pyc
+.idea
+.venv
+dist
+app.spec
+henrikdevmap.txt
+build
