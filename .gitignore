@@ -8,3 +8,4 @@ dist
 app.spec
 henrikdevmap.txt
 build
+test.py
