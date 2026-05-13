@@ -14,7 +14,7 @@ from PyQt6.QtWidgets import (
     QSizePolicy, QTabWidget, QTableWidget, QTableWidgetItem, QHeaderView,
     QAbstractItemView,
 )
-from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtCore import Qt, QTimer, QSize
 from PyQt6.QtGui import QFont, QColor, QPixmap, QPainter, QBrush, QPen
 
 import db
@@ -207,19 +207,16 @@ def season_combo(include_all: bool = True) -> QComboBox:
     if include_all:
         combo.addItem("All Seasons", None)
     seasons = db.get_known_seasons()
+    ignored = db.get_ignored_seasons()
     for s in seasons:
-        short = s.split("-")[0] if "-" in s else s
-        display = f"Current  ({short})" if s == seasons[0] else short
-        combo.addItem(display, s)
+        if s not in ignored:
+            short = s.split("-")[0] if "-" in s else s
+            display = f"Current  ({short})" if s == seasons[0] else short
+            combo.addItem(display, s)
     return combo
 
 
 def _table(cols: list[tuple[str, int]], stretch_col: int = 0) -> QTableWidget:
-    """
-    Build a uniform QTableWidget.
-    cols = [(header_label, fixed_width_or_0_for_stretch), ...]
-    stretch_col = which column index gets remaining space
-    """
     t = QTableWidget()
     t.setColumnCount(len(cols))
     t.setHorizontalHeaderLabels([c[0] for c in cols])
@@ -298,13 +295,10 @@ class MatchCard(QFrame):
         hl.addWidget(lbl(m["date"], size=10, color=TEXT_DIM))
         root.addWidget(header)
 
-        # Player table  –  columns sum to a fixed total so they always align
-        # Player(stretch) | Agent(100) | KDA(90) | K/D(64) | HS%(64) | Score(70)
         cols = [("PLAYER", 0), ("AGENT", 100), ("KDA", 90), ("K/D", 64), ("HS%", 64), ("SCORE", 70)]
         t = _table(cols, stretch_col=0)
         t.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         t.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        t.wheelEvent = lambda e: e.ignore()
 
         players = sorted(m["players"], key=lambda x: x["score"], reverse=True)
         t.setRowCount(len(players))
@@ -342,17 +336,13 @@ class HistoryTab(QWidget):
         root.addLayout(bar)
         root.addWidget(divider())
 
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        # Plain widget – no scroll container at all
         self.inner = QWidget()
         self.vbox  = QVBoxLayout(self.inner)
         self.vbox.setSpacing(14)
         self.vbox.setContentsMargins(0, 6, 6, 6)
         self.vbox.addStretch()
-        scroll.setWidget(self.inner)
-        root.addWidget(scroll)
+        root.addWidget(self.inner)
 
         self.refresh()
 
@@ -395,13 +385,9 @@ class PlayersTab(QWidget):
         root.addLayout(bar)
         root.addWidget(divider())
 
-        # Single table for all players
-        # Icon col is narrow; name stretches; stats are fixed-width
-        # Icon(44) | Player(stretch) | GP(52) | W%(64) | K/D(64) | HS%(64) | AVG K(64) | Top Agent(120)
         cols = [("", 44), ("PLAYER", 0), ("GP", 52), ("W%", 64),
                 ("K/D", 64), ("HS%", 64), ("AVG K", 64), ("TOP AGENT", 120)]
         self.table = _table(cols, stretch_col=1)
-        self.table.setIconSize(QSize(32, 32) if hasattr(self.table, "setIconSize") else None)
         root.addWidget(self.table)
 
         self.refresh()
@@ -418,7 +404,6 @@ class PlayersTab(QWidget):
             agent_rows = db.get_agent_stats(p["puuid"], season_id=season)
             top_agent  = agent_rows[0]["agent"] if agent_rows else None
 
-            # Icon cell – embed the coloured circle pixmap
             icon_lbl = agent_icon(top_agent or "??", 30)
             icon_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.table.setCellWidget(row, 0, icon_lbl)
@@ -466,7 +451,6 @@ class MapsTab(QWidget):
         root.addLayout(bar)
         root.addWidget(divider())
 
-        # Map(stretch) | Played(80) | Wins(80) | Losses(80) | Win%(90) | Bar(180)
         cols = [("MAP", 0), ("PLAYED", 80), ("WINS", 80), ("LOSSES", 80), ("WIN %", 90), ("", 180)]
         self.table = _table(cols, stretch_col=0)
         root.addWidget(self.table)
@@ -514,10 +498,6 @@ class MapsTab(QWidget):
 
 # ── Main Window ───────────────────────────────────────────────────────────────
 
-# needed for QSize in PlayersTab
-from PyQt6.QtCore import QSize
-
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -535,7 +515,6 @@ class MainWindow(QMainWindow):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
-        # Top bar
         topbar = QWidget()
         topbar.setFixedHeight(50)
         topbar.setStyleSheet(f"background: {BG_PANEL}; border-bottom: 1px solid {BORDER};")
@@ -603,7 +582,9 @@ def main():
     win = MainWindow()
     win.showMaximized()
     win.show()
-    sys.exit(app.exec())
+    exit_code = app.exec()
+    db.close_pool()
+    sys.exit(exit_code)
 
 
 if __name__ == "__main__":
