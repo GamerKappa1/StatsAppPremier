@@ -74,8 +74,8 @@ def cmd_stats(args) -> None:
         return
 
     season = _resolve_season(getattr(args, "season", None))
-    print(f"\n{'Player':<25} {'GP':>4} {'W%':>6} {'KD':>6} {'HS%':>7} {'Avg K':>7} {'Avg D':>6} {'Avg A':>6}")
-    print("─" * 74)
+    print(f"\n{'Player':<25} {'GP':>4} {'W%':>6} {'KD':>6} {'HS%':>6} {'Avg K':>6} {'Avg D':>6} {'Avg A':>6}")
+    print("─" * 70)
 
     for p in players:
         s = get_player_stats_aggregated(p["puuid"], season_id=season)
@@ -89,6 +89,34 @@ def cmd_stats(args) -> None:
             f"{s['hs_percent']:>5.1f}%  {s['avg_kills']:>5.1f}  "
             f"{s['avg_deaths']:>5.1f}  {s['avg_assists']:>5.1f}"
         )
+
+
+def cmd_ignore_season(args) -> None:
+    from db import init_db, ignore_season, get_known_seasons
+    init_db()
+    season_id = args.season_id
+    ignore_season(season_id)
+    print(f"✓ Season ignored: {season_id}")
+
+
+def cmd_include_season(args) -> None:
+    from db import init_db, unignore_season
+    init_db()
+    season_id = args.season_id
+    unignore_season(season_id)
+    print(f"✓ Season included: {season_id}")
+
+
+def cmd_ignored_seasons(_args) -> None:
+    from db import init_db, get_ignored_seasons
+    init_db()
+    seasons = get_ignored_seasons()
+    if not seasons:
+        print("No seasons are currently ignored.")
+        return
+    print("\nIgnored seasons:")
+    for s in sorted(seasons):
+        print(f"  {s}")
 
 
 def cmd_seasons(_args) -> None:
@@ -131,7 +159,7 @@ def cmd_history(args) -> None:
         result_color = "✓" if m["result"] == "W" else "✗"
         print(f"\n  {result_color} {m['result']}  {m['map_name']:<12}  {m['score']}  ({m['rounds']} rounds)  –  {m['date']}")
         print(f"  {'Player':<22} {'Team':<5} {'Agent':<12} {'KDA':>10} {'KD':>6} {'HS%':>6} {'Score':>7}")
-        print("  " + "─" * 74)
+        print("  " + "─" * 70)
         for p in sorted(m["players"], key=lambda x: x["score"], reverse=True):
             print(
                 f"  {p['name']:<22} {p['team']:<5} {p['agent']:<12} "
@@ -202,6 +230,14 @@ def build_parser() -> argparse.ArgumentParser:
     stp = sub.add_parser("stats", help="Print aggregated player stats")
     stp.add_argument("--season", default=None, help="Filter by season_id")
 
+    isp = sub.add_parser("ignore-season", help="Add a season to the ignore list")
+    isp.add_argument("season_id", help="Season ID to ignore")
+
+    usp = sub.add_parser("include-season", help="Remove a season from the ignore list")
+    usp.add_argument("season_id", help="Season ID to include again")
+
+    sub.add_parser("ignored-seasons", help="List all currently ignored seasons")
+
     sub.add_parser("seasons", help="List all season IDs found in the DB")
 
     hp = sub.add_parser("history", help="Show recent match history with per-player stats")
@@ -226,7 +262,10 @@ def main() -> None:
         "add-player": cmd_add_player,
         "sync":       cmd_sync,
         "stats":      cmd_stats,
-        "seasons":    cmd_seasons,
+        "ignore-season":   cmd_ignore_season,
+        "include-season":  cmd_include_season,
+        "ignored-seasons": cmd_ignored_seasons,
+        "seasons":         cmd_seasons,
         "history":     cmd_history,
         "agent-stats": cmd_agent_stats,
         "map-stats":  cmd_map_stats,
