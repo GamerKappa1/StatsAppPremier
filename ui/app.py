@@ -295,10 +295,13 @@ class MatchCard(QFrame):
         hl.addWidget(lbl(m["date"], size=10, color=TEXT_DIM))
         root.addWidget(header)
 
+        # Player table  –  columns sum to a fixed total so they always align
+        # Player(stretch) | Agent(100) | KDA(90) | K/D(64) | HS%(64) | Score(70)
         cols = [("PLAYER", 0), ("AGENT", 100), ("KDA", 90), ("K/D", 64), ("HS%", 64), ("SCORE", 70)]
         t = _table(cols, stretch_col=0)
         t.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         t.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        t.wheelEvent = lambda e: e.ignore()
 
         players = sorted(m["players"], key=lambda x: x["score"], reverse=True)
         t.setRowCount(len(players))
@@ -336,13 +339,17 @@ class HistoryTab(QWidget):
         root.addLayout(bar)
         root.addWidget(divider())
 
-        # Plain widget – no scroll container at all
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.inner = QWidget()
         self.vbox  = QVBoxLayout(self.inner)
         self.vbox.setSpacing(14)
         self.vbox.setContentsMargins(0, 6, 6, 6)
         self.vbox.addStretch()
-        root.addWidget(self.inner)
+        scroll.setWidget(self.inner)
+        root.addWidget(scroll)
 
         self.refresh()
 
