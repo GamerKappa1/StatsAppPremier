@@ -516,5 +516,5 @@ def get_match_history(
 def get_known_seasons() -> list[str]:
     with get_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute("SELECT DISTINCT season_id FROM matches ORDER BY season_id DESC")
+            cur.execute("SELECT DISTINCT season_id FROM matches")
             return [row[0] for row in cur.fetchall()]
